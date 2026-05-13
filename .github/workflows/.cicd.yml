@@ -3,19 +3,20 @@ name: Backend-ERP
 on:
   push:
     branches:
-      - master
+       - main
 
 jobs:
 
   build:
     name: Build and Push Docker Image
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout Source
         uses: actions/checkout@v4
 
       - name: Login to Docker Hub
-        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
       - name: Build Docker Image
         run: docker build -t ${{ secrets.DOCKER_USERNAME }}/erp-backend:${{ github.sha }} .
@@ -25,11 +26,12 @@ jobs:
 
   deploy:
     name: Deploy to EC2
-    needs: build     # Only runs if build succeeds
+    needs: build
     runs-on: self-hosted
+
     steps:
       - name: Login to Docker Hub
-        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
       - name: Pull Latest Docker Image
         run: docker pull ${{ secrets.DOCKER_USERNAME }}/erp-backend:${{ github.sha }}
@@ -42,17 +44,18 @@ jobs:
 
       - name: Run New Docker Container
         run: |
-          docker run -d -p ${{ secrets.PORT }}:${{ secrets.PORT }} \
-          --name erp-backend-service \
-          --restart unless-stopped \
-          -e AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }} \
-          -e AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} \
-          -e AWS_REGION=${{ secrets.AWS_REGION }} \
-          -e S3_BUCKET_NAME=${{ secrets.S3_BUCKET_NAME }} \
-          -e JWT_SECRET=${{ secrets.JWT_SECRET }} \
-          -e MONGO_URI=${{ secrets.MONGO_URI }} \
-          -e REDIS_URL=${{ secrets.REDIS_URL }} \
-          -e PORT=${{ secrets.PORT }} \
-          -e GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }} \
-          -e Meta_Token=${{secrets.Meta_Token}} \
-          ${{ secrets.DOCKER_USERNAME }}/erp-backend:${{ github.sha }}
+          docker run -d \
+            -p ${{ secrets.PORT }}:${{ secrets.PORT }} \
+            --name erp-backend-service \
+            --restart unless-stopped \
+            -e API_KEY=${{ secrets.API_KEY }} \
+            -e API_SECRET=${{ secrets.API_SECRET }} \
+            -e CLOUD_NAME=${{ secrets.CLOUD_NAME }} \
+            -e JWT_SECRET=${{ secrets.JWT_SECRET }} \
+            -e MONGODB_URL=${{ secrets.MONGODB_URL }} \
+            -e NODE_MODE=${{ secrets.NODE_MODE }} \
+            -e PORT=${{ secrets.PORT }} \
+            -e RAZORPAY_KEY_ID=${{ secrets.RAZORPAY_KEY_ID }} \
+            -e RAZORPAY_KEY_SECRET=${{ secrets.RAZORPAY_KEY_SECRET }} \
+            -e RAZORPAY_WEBHOOK_SECRET=${{ secrets.RAZORPAY_WEBHOOK_SECRET }} \
+            ${{ secrets.DOCKER_USERNAME }}/erp-backend:${{ github.sha }}
