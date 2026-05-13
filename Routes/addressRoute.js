@@ -8,6 +8,7 @@ router.post('/', createAddress);
 
 router.get('/all', allAddress);
 
+
 router.get('/single/:id', singleAddress);
 
 router.put('/update/:id' ,updateAddress);
