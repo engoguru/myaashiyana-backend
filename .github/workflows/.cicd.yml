@@ -1,9 +1,9 @@
-name: Backend-ERP
+name: Backend-naman
 
 on:
   push:
     branches:
-       - main
+      - main
 
 jobs:
 
@@ -19,10 +19,10 @@ jobs:
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
       - name: Build Docker Image
-        run: docker build -t ${{ secrets.DOCKER_USERNAME }}/erp-backend:${{ github.sha }} .
+        run: docker build -t ${{ secrets.DOCKER_USERNAME }}/Backend-naman:${{ github.sha }} .
 
       - name: Push Docker Image
-        run: docker push ${{ secrets.DOCKER_USERNAME }}/erp-backend:${{ github.sha }}
+        run: docker push ${{ secrets.DOCKER_USERNAME }}/Backend-naman:${{ github.sha }}
 
   deploy:
     name: Deploy to EC2
@@ -34,19 +34,19 @@ jobs:
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
       - name: Pull Latest Docker Image
-        run: docker pull ${{ secrets.DOCKER_USERNAME }}/erp-backend:${{ github.sha }}
+        run: docker pull ${{ secrets.DOCKER_USERNAME }}/Backend-naman:${{ github.sha }}
 
       - name: Remove Old Container
         run: |
-          if [ "$(docker ps -aq -f name=erp-backend-service)" ]; then
-            docker rm -f erp-backend-service
+          if [ "$(docker ps -aq -f name=Backend-naman-service)" ]; then
+            docker rm -f Backend-naman-service
           fi
 
       - name: Run New Docker Container
         run: |
           docker run -d \
             -p ${{ secrets.PORT }}:${{ secrets.PORT }} \
-            --name erp-backend-service \
+            --name Backend-naman-service \
             --restart unless-stopped \
             -e API_KEY=${{ secrets.API_KEY }} \
             -e API_SECRET=${{ secrets.API_SECRET }} \
@@ -58,4 +58,4 @@ jobs:
             -e RAZORPAY_KEY_ID=${{ secrets.RAZORPAY_KEY_ID }} \
             -e RAZORPAY_KEY_SECRET=${{ secrets.RAZORPAY_KEY_SECRET }} \
             -e RAZORPAY_WEBHOOK_SECRET=${{ secrets.RAZORPAY_WEBHOOK_SECRET }} \
-            ${{ secrets.DOCKER_USERNAME }}/erp-backend:${{ github.sha }}
+            ${{ secrets.DOCKER_USERNAME }}/Backend-naman:${{ github.sha }}
