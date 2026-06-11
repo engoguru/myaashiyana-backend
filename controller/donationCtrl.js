@@ -157,11 +157,44 @@ const handleWebhook = asyncHandler(async (req, res) => {
 const allDonations = asyncHandler(async (req, res) => {
     try {
         const donations = await Donation.find().sort({ createdAt: -1 });
+
         res.json(donations);
     } catch (error) {
         res.status(500);
         throw new Error(error.message || "Failed to fetch donations");
     }
+});
+const topDonations = asyncHandler(async (req, res) => {
+  try {
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const endOfDay = new Date();
+    endOfDay.setHours(23, 59, 59, 999);
+
+    const [donations, todayDonations] = await Promise.all([
+      Donation.find()
+        .sort({ createdAt: -1 })
+        .limit(5),
+
+      Donation.find({
+        createdAt: {
+          $gte: startOfDay,
+          $lte: endOfDay,
+        },
+      })
+        .sort({ amount: -1 }) // replace amount with your field name
+        .limit(5),
+    ]);
+
+    res.json({
+      donations,
+      todayDonations,
+    });
+  } catch (error) {
+    res.status(500);
+    throw new Error(error.message || "Failed to fetch donations");
+  }
 });
 
 /* ================= GET SINGLE DONATION ================= */
@@ -209,4 +242,6 @@ module.exports = {
     singleDonation,
     deleteDonation,
     handleWebhook,
+    topDonations
+
 };
